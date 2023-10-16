@@ -39,6 +39,7 @@
 
     - name: Generate Self-Signed SSL Certificate
       command: "openssl req -x509 -nodes -newkey rsa:4096 -keyout /etc/httpd/conf.d/ssl.key -out /etc/httpd/conf.d/ssl.crt"
+      become: yes
 
     - name: Create website directories
       file:
