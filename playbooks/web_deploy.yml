@@ -1,0 +1,50 @@
+---
+- name: Web Deployment
+  hosts: localhost
+  connection: local
+  become: yes
+  become_method: sudo
+  vars:
+    site_domains:
+      - { site_domain: "site1.local", site_name: "Site 1" }
+      - { site_domain: "site2.local", site_name: "Site 2" }
+      - { site_domain: "site3.local", site_name: "Site 3" }
+
+  tasks:
+    - name: Create 'webguy' user
+      user:
+        name: webguy
+        groups: wheel
+        append: yes
+        state: present
+      when: ansible_distribution == 'RedHat'
+
+    - name: Install Apache or Nginx
+      package:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - httpd
+
+    - name: Configure virtual hosts
+      template:
+        src: "/home/afranc/ansible/roles/web_server/templates/vhost.conf.j2"
+        dest: "/etc/httpd/conf.d/{{ item.site_domain }}.conf"
+      loop: "{{ site_domains }}"
+
+    - name: Generate Self-Signed SSL Certificate
+      command: "openssl req -x509 -nodes -newkey rsa:4096 -keyout /etc/httpd/conf.d/ssl.key -out /etc/httpd/conf.d/ssl.crt"
+      when: ansible_distribution == 'RedHat'
+
+    - name: Create website directories
+      file:
+        path: "/var/www/html/{{ item.site_domain }}"
+        state: directory
+      loop: "{{ site_domains }}"
+
+    - name: Deploy index.html
+      template:
+        src: "/home/afranc/ansible/roles/web_server/templates/index.html.j2"
+        dest: "/var/www/html/{{ item.site_domain }}/index.html"
+      loop: "{{ site_domains }}"
+ 
