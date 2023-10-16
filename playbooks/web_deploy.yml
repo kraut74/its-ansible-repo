@@ -25,6 +25,13 @@
         state: present
       with_items:
         - httpd
+        
+    - name: Start and enable Apache service
+      systemd:
+        name: httpd
+        state: started
+        enabled: yes
+      when: ansible_distribution == 'RedHat'    
 
     - name: Configure virtual hosts
       template:
