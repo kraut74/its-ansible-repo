@@ -17,8 +17,7 @@
         groups: wheel
         append: yes
         state: present
-      when: ansible_distribution == 'RedHat'
-
+      
     - name: Install Apache or Nginx
       package:
         name: "{{ item }}"
@@ -30,8 +29,7 @@
       systemd:
         name: httpd
         state: started
-        enabled: yes
-      when: ansible_distribution == 'RedHat'    
+        enabled: yes 
 
     - name: Configure virtual hosts
       template:
@@ -41,7 +39,6 @@
 
     - name: Generate Self-Signed SSL Certificate
       command: "openssl req -x509 -nodes -newkey rsa:4096 -keyout /etc/httpd/conf.d/ssl.key -out /etc/httpd/conf.d/ssl.crt"
-      when: ansible_distribution == 'RedHat'
 
     - name: Create website directories
       file:
