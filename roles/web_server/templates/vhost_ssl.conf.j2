@@ -1,0 +1,23 @@
+<VirtualHost *:443>
+    ServerAdmin webguy@site1.local
+    ServerName site1.local
+    ServerAlias www.site1.local
+    DocumentRoot /var/www/html/site1.local
+
+    # Enable SSL
+    SSLEngine on
+    SSLCertificateFile /etc/httpd/conf.d/ssl.crt
+    SSLCertificateKeyFile /etc/httpd/conf.d/ssl.key
+
+    # Other SSL Configuration Options (e.g., SSLProtocol, SSLCipherSuite, etc.)
+
+    ErrorLog /var/log/httpd/site1.local_error.log
+    CustomLog /var/log/httpd/site1.local_access.log combined
+
+    <Directory /var/www/html/site1.local>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+</VirtualHost>
