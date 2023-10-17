@@ -37,9 +37,19 @@
         dest: "/etc/httpd/conf.d/{{ item.site_domain }}.conf"
       loop: "{{ site_domains }}"
 
-    - name: Generate Self-Signed SSL Certificate
-      command: "openssl req -x509 -nodes -newkey rsa:4096 -keyout /etc/httpd/conf.d/ssl.key -out /etc/httpd/conf.d/ssl.crt"
-      become: yes
+    - openssl_privatekey:
+      path: /etc/httpd/conf.d/ssl.key
+      size: 2048 
+
+    - openssl_csr:
+      path: /etc/httpd/conf.d/ssl.csr
+      privatekey_path: /etc/httpd/conf.d/ssl.key
+
+    - openssl_certificate:
+      provider: selfsigned
+      path: /etc/httpd/conf.d/ssl.crt
+      privatekey_path: /etc/httpd/conf.d/ssl.key
+      csr_path: /etc/httpd/conf.d/ssl.csr
 
     - name: Create website directories
       file:
