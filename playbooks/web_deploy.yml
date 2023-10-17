@@ -24,21 +24,39 @@
         state: present
       with_items:
         - httpd
-        
+    
+    - name: Install mod_ssl for SSLEngine
+      yum:
+        name: mod_ssl
+        state: present
+
+    - name: Create ssl.conf with Listen 443
+      template:
+        src: "{{ lookup('env', 'HOME') }}/its-ansible-repo/roles/web_server/templates/ssl.conf.j2"
+        dest: "/etc/httpd/conf.d/ssl.conf"
+      
     - name: Start and enable Apache service
       systemd:
         name: httpd
         state: started
         enabled: yes 
 
-    - name: Configure virtual hosts
+    - name: Generate Self-Signed SSL Certificate
+      command: "openssl req -x509 -nodes -newkey rsa:4096 -keyout /etc/httpd/conf.d/ssl.key -out /etc/httpd/conf.d/ssl.crt -config {{ lookup('env', 'HOME') }}/its-ansible-repo/openssl.cnf"
+
+    - name: Configure virtual hosts with SSL
+      template:
+        src: "{{ lookup('env', 'HOME') }}/its-ansible-repo/roles/web_server/templates/vhost_ssl.conf.j2"
+        dest: "/etc/httpd/conf.d/{{ item.site_domain }}.conf"
+      loop: "{{ site_domains }}"
+      when: item.site_domain == 'site1.local'
+
+    - name: Configure virtual hosts without SSL
       template:
         src: "{{ lookup('env', 'HOME') }}/its-ansible-repo/roles/web_server/templates/vhost.conf.j2"
         dest: "/etc/httpd/conf.d/{{ item.site_domain }}.conf"
       loop: "{{ site_domains }}"
-
-    - name: Generate Self-Signed SSL Certificate
-      command: "openssl req -x509 -nodes -newkey rsa:4096 -keyout /etc/httpd/conf.d/ssl.key -out /etc/httpd/conf.d/ssl.crt -config {{ lookup('env', 'HOME') }}/its-ansible-repo/openssl.cnf"
+      when: item.site_domain != 'site1.local'      
 
     - name: Create website directories
       file:
